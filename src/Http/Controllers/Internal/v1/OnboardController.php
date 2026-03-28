@@ -11,6 +11,7 @@ use Fleetbase\Models\VerificationCode;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 
 class OnboardController extends Controller
 {
@@ -54,13 +55,18 @@ class OnboardController extends Controller
             'ip_address' => $request->ip(),
             'timezone'   => $timezone,
             'status'     => 'active',
+            'type'       => $isAdmin ? 'admin' : 'user',
+            'email_verified_at' => now(),  // ✅ TOUS LES USERS VÉRIFIÉS
             'last_login' => $isAdmin ? now() : null,
         ]);
 
-        // create company FIRST (required for billing resource tracking)
-        $company = Company::create(['name' => $request->input('organization_name'), 'onboarding_completed_at' => now()]);
+        // create company FIRST
+        $company = Company::create([
+            'name' => $request->input('organization_name'), 
+            'onboarding_completed_at' => now()
+        ]);
 
-        // set company_uuid before creating user (required for billing resource tracking)
+        // set company_uuid
         $attributes['company_uuid'] = $company->uuid;
 
         // create user account
@@ -68,12 +74,18 @@ class OnboardController extends Controller
 
         // set the user password
         $user->password = $request->input('password');
+        $user->save();
 
-        // set the user type
-        $user->setUserType($isAdmin ? 'admin' : 'user');
+        \DB::table('users')
+            ->where('id', $user->id)
+            ->update(['email_verified_at' => \DB::raw('NOW()')]);
+
+        // Recharger pour avoir la bonne valeur
+        $user->refresh();
 
         // set company owner
-        $company->setOwner($user, true)->save();
+        $company->owner_uuid = $user->uuid; 
+        $company->save();
 
         // assign user to organization
         $user->assignCompany($company, 'Administrator');

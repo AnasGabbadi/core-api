@@ -14,6 +14,7 @@ class FleetbaseSeeder extends Seeder
     public function run()
     {
         $this->call(ExtensionSeeder::class);
+        $this->call(RolesSeeder::class);
         $this->call(PermissionSeeder::class);
     }
 }

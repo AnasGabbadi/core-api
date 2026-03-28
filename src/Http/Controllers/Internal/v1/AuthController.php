@@ -103,9 +103,9 @@ class AuthController extends Controller
             ]);
         }
 
-        if ($user->isNotVerified() && $user->isNotAdmin()) {
-            return response()->error('User is not verified.', 400, ['code' => 'not_verified']);
-        }
+        // if ($user->isNotVerified() && $user->isNotAdmin()) {
+        //     return response()->error('User is not verified.', 400, ['code' => 'not_verified']);
+        // }
 
         // Login
         $user->updateLastLogin();
@@ -201,6 +201,7 @@ class AuthController extends Controller
 
             if (session()->has('impersonator')) {
                 $session['impersonator'] = session()->get('impersonator');
+                $session['is_impersonating'] = true;
             }
 
             // Get organizations (optimized query)

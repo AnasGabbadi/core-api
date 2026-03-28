@@ -32,8 +32,20 @@ class UpdateUserRequest extends FleetbaseRequest
     {
         // Resolve the target user UUID from the route parameter so that the
         // uniqueness rules can correctly ignore the user's own current value.
-        $userId = $this->route('id');
-
+        $user = $this->route('user');
+            
+        // Extrait l'UUID
+        $userId = $user?->uuid ?? $user;
+        
+        // En dernier recours
+        if (!$userId) {
+            $userId = $this->input('_user_id');
+        }
+        
+        if (!$userId) {
+            throw new \Exception('Cannot determine user ID for update validation');
+        }
+        
         return [
             'name'  => ['sometimes', 'required', 'string', 'min:2', 'max:100'],
 

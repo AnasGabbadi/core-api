@@ -140,8 +140,9 @@ class UserController extends FleetbaseController
         // Run the UpdateUserRequest validation rules before delegating to the
         // model trait. This prevents email/phone being set to an empty string
         // and enforces uniqueness constraints on partial (PATCH) updates.
+        $request->merge(['_user_id' => $id]);
+    
         $this->validateRequest($request);
-
         try {
             $record = $this->model->updateRecordFromRequest($request, $id, function (&$request, &$user) {
                 // Assign role if set
